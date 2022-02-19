@@ -5,6 +5,7 @@ import {
   clusterApiUrl,
   Connection,
   LAMPORTS_PER_SOL,
+  PublicKey,
 } from "@solana/web3.js";
 import toast, { Toaster } from 'react-hot-toast';
 
@@ -19,7 +20,7 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: any) => {
   toast.promise(new Promise(async (resolve, reject) => {
     const airdropSignature = await connection.requestAirdrop(
       publicKey,
-      LAMPORTS_PER_SOL * 1,
+      LAMPORTS_PER_SOL,
     );
     const sig = await connection.confirmTransaction(airdropSignature);
     let account = await connection.getAccountInfo(publicKey);
@@ -47,8 +48,8 @@ const Home: NextPage = () => {
     const transaction = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: publicKey,
-        toPubkey: Keypair.generate().publicKey,
-        lamports: 1,
+        toPubkey: new PublicKey('2GLjNxR3Gf37PhDrMMa1copXXHvpSmwMbv9Qb94TK9yx'),
+        lamports: 10000_000,
       })
     );
 
@@ -78,7 +79,7 @@ const Home: NextPage = () => {
             <br />
             <Button
               type="primary"
-              onClick={() => getTestTokens('devnet', publicKey)}
+              onClick={onClick}
             >
               Send to yogi
             </Button>
