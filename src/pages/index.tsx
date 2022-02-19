@@ -25,8 +25,6 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey
       LAMPORTS_PER_SOL,
     );
     const sig = await connection.confirmTransaction(airdropSignature);
-    let account = await connection.getAccountInfo(publicKey);
-    console.log(account);
     if (sig.value.err) {
       reject(sig.value.err);
     }
@@ -47,8 +45,6 @@ const Home: NextPage = () => {
   const [recipient, setRecipient] = useState('');
   const [balance, setBalance] = useState<null | number>(null);
 
-  console.log(amount);
-
   const getBalance = async () => {
     if (publicKey) {
       const account = await connection.getAccountInfo(publicKey);
@@ -59,23 +55,46 @@ const Home: NextPage = () => {
 
   useEffect(() => {
     getBalance().then((balance) => setBalance(balance));
-  })
+  }, [publicKey])
 
-  const onClick = useCallback(async () => {
+  const sendMonies = useCallback(async () => {
     if (!publicKey) throw new WalletNotConnectedError();
-
-    console.log(amount);
     const transaction = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: publicKey,
-        toPubkey: new PublicKey(recipient),
+        toPubkey: new PublicKey('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC'),
         lamports: amount * LAMPORTS_PER_SOL,
       })
     );
 
     const signature = await sendTransaction(transaction, connection);
 
-    await connection.confirmTransaction(signature, 'processed');
+    getBalance().then((balance) => setBalance(balance));
+
+    toast.promise(new Promise(async (resolve, reject) => {
+      let i = 0;
+      const interval = setInterval(async () => {
+        console.log(i);
+        if (++i > 100) {
+          reject();
+          clearInterval(interval);
+        }
+
+        if (await connection.getTransaction(signature, {commitment: 'confirmed'})) {
+          resolve('');
+          clearInterval(interval);
+        }
+      }, 250)
+    }), {
+      loading: 'Sending tokens',
+      success: <>Tokens sent.&nbsp;<a target="_blank" href={`https://solscan.io/tx/${signature}?cluster=devnet`}>View transaction</a></>,
+      error: 'Error while sending test tokens',
+    });
+
+    // We catch and don't do anything with errors because they happen on every transaction for some reason
+    const info = await connection.confirmTransaction(signature, 'confirmed').catch(() => {});
+
+    console.log(info);
   }, [publicKey, sendTransaction, connection, amount]);
 
   return (
@@ -97,7 +116,7 @@ const Home: NextPage = () => {
           <div>
             <p>Connected account {publicKey.toString()}</p>
             {balance && (
-              <p>Your balance: { (balance / LAMPORTS_PER_SOL).toLocaleString()}</p>
+              <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString()} SOL</p>
             )}
             <br />
             <Input placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} />
@@ -116,7 +135,7 @@ const Home: NextPage = () => {
             <br />
             <Button
               type="primary"
-              onClick={onClick}
+              onClick={sendMonies}
               style={{ marginTop: 15 }}
               disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
             >
@@ -125,7 +144,7 @@ const Home: NextPage = () => {
             <Divider orientationMargin={20}></Divider>
             <Button
               type="primary"
-              onClick={() => getTestTokens('devnet', publicKey)}
+              onClick={() => { getTestTokens('devnet', publicKey).then(() => getBalance().then((balance) => setBalance(balance))) }}
             >
               Get tokens
             </Button>
