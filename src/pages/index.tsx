@@ -1,5 +1,5 @@
 import type { NextPage } from 'next'
-import { Button, Divider, InputNumber } from 'antd';
+import { Button, Divider, Input, InputNumber } from 'antd';
 
 import {
   clusterApiUrl,
@@ -12,7 +12,9 @@ import toast, { Toaster } from 'react-hot-toast';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { SystemProgram, Transaction } from '@solana/web3.js';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+
+import WAValidator from 'multicoin-address-validator';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -41,26 +43,40 @@ const Home: NextPage = () => {
 
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const [customAmount, setAmount] = useState(0);
+  const [amount, setAmount] = useState(0);
+  const [recipient, setRecipient] = useState('');
+  const [balance, setBalance] = useState<null | number>(null);
 
-  console.log(customAmount);
+  console.log(amount);
+
+  const getBalance = async () => {
+    if (publicKey) {
+      const account = await connection.getAccountInfo(publicKey);
+      return account?.lamports ?? null;
+    }
+    return null;
+  }
+
+  useEffect(() => {
+    getBalance().then((balance) => setBalance(balance));
+  })
 
   const onClick = useCallback(async () => {
     if (!publicKey) throw new WalletNotConnectedError();
 
-    console.log(customAmount);
+    console.log(amount);
     const transaction = new Transaction().add(
       SystemProgram.transfer({
         fromPubkey: publicKey,
-        toPubkey: new PublicKey('2GLjNxR3Gf37PhDrMMa1copXXHvpSmwMbv9Qb94TK9yx'),
-        lamports: customAmount * LAMPORTS_PER_SOL,
+        toPubkey: new PublicKey(recipient),
+        lamports: amount * LAMPORTS_PER_SOL,
       })
     );
 
     const signature = await sendTransaction(transaction, connection);
 
     await connection.confirmTransaction(signature, 'processed');
-  }, [publicKey, sendTransaction, connection, customAmount]);
+  }, [publicKey, sendTransaction, connection, amount]);
 
   return (
     <div style={{
@@ -80,9 +96,13 @@ const Home: NextPage = () => {
         {publicKey &&
           <div>
             <p>Connected account {publicKey.toString()}</p>
+            {balance && (
+              <p>Your balance: { (balance / LAMPORTS_PER_SOL).toLocaleString()}</p>
+            )}
             <br />
+            <Input placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} />
             <InputNumber<number>
-              style={{ width: 200 }}
+              style={{ width: 200, marginTop: 7 }}
               defaultValue={1}
               min={0}
               max={10_000_000_000}
@@ -90,13 +110,17 @@ const Home: NextPage = () => {
               onChange={(amnt) => {
                 setAmount(amnt);
               }}
+              addonAfter="SOL"
               stringMode={false}
             />
+            <br />
             <Button
               type="primary"
               onClick={onClick}
+              style={{ marginTop: 15 }}
+              disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
             >
-              Send to yogi
+              Send
             </Button>
             <Divider orientationMargin={20}></Divider>
             <Button
