@@ -12,7 +12,7 @@ import toast, { Toaster } from 'react-hot-toast';
 import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { SystemProgram, Transaction } from '@solana/web3.js';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 
 import WAValidator from 'multicoin-address-validator';
 
@@ -34,6 +34,8 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey
     loading: 'Sending you tokens',
     success: 'Tokens sent',
     error: 'Error while sending test tokens',
+  }, {
+    duration: 5000,
   })
 }
 
@@ -53,8 +55,14 @@ const Home: NextPage = () => {
     return null;
   }
 
+
   useEffect(() => {
     getBalance().then((balance) => setBalance(balance));
+    if (publicKey) {
+      connection.onAccountChange(publicKey, () => {
+        getBalance().then((balance) => setBalance(balance));
+      }, 'confirmed')
+    }
   }, [publicKey])
 
   const sendMonies = useCallback(async () => {
@@ -80,7 +88,7 @@ const Home: NextPage = () => {
           clearInterval(interval);
         }
 
-        if (await connection.getTransaction(signature, {commitment: 'confirmed'})) {
+        if (await connection.getTransaction(signature, { commitment: 'confirmed' })) {
           resolve('');
           clearInterval(interval);
         }
@@ -89,10 +97,12 @@ const Home: NextPage = () => {
       loading: 'Sending tokens',
       success: <>Tokens sent.&nbsp;<a target="_blank" href={`https://solscan.io/tx/${signature}?cluster=devnet`}>View transaction</a></>,
       error: 'Error while sending test tokens',
+    }, {
+      duration: 5000,
     });
 
     // We catch and don't do anything with errors because they happen on every transaction for some reason
-    const info = await connection.confirmTransaction(signature, 'confirmed').catch(() => {});
+    const info = await connection.confirmTransaction(signature, 'confirmed').catch(() => { });
 
     console.log(info);
   }, [publicKey, sendTransaction, connection, amount]);
@@ -144,7 +154,7 @@ const Home: NextPage = () => {
             <Divider orientationMargin={20}></Divider>
             <Button
               type="primary"
-              onClick={() => { getTestTokens('devnet', publicKey).then(() => getBalance().then((balance) => setBalance(balance))) }}
+              onClick={() => { getTestTokens('devnet', publicKey) }}
             >
               Get tokens
             </Button>
