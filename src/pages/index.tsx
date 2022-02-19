@@ -1,5 +1,5 @@
 import type { NextPage } from 'next'
-import { Button, Divider, Input, InputNumber } from 'antd';
+import { Button, Divider, Input, InputNumber, Modal, Tooltip } from 'antd';
 
 import {
   clusterApiUrl,
@@ -15,6 +15,8 @@ import { SystemProgram, Transaction } from '@solana/web3.js';
 import React, { useCallback, useEffect, useState } from 'react';
 
 import WAValidator from 'multicoin-address-validator';
+import { QrcodeOutlined } from '@ant-design/icons';
+import { ContinuousQrScanner } from 'react-webcam-qr-scanner.ts';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -46,6 +48,13 @@ const Home: NextPage = () => {
   const [amount, setAmount] = useState(0);
   const [recipient, setRecipient] = useState('');
   const [balance, setBalance] = useState<null | number>(null);
+
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  const showModal = () => {
+    setIsModalVisible(true);
+    setRecipient('');
+  };
 
   const getBalance = async () => {
     if (publicKey) {
@@ -124,12 +133,19 @@ const Home: NextPage = () => {
 
         {publicKey &&
           <div>
-            <p>Connected account {publicKey.toString()}</p>
+            <p>Connected account: {publicKey.toString()}</p>
             {balance && (
               <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString()} SOL</p>
             )}
             <br />
-            <Input placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} />
+            <Input.Group compact>
+              <Input style={{ width: 'calc(100% - 200px)' }}
+                placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
+
+              <Tooltip title="scan address">
+                <Button icon={<QrcodeOutlined />} onClick={showModal} />
+              </Tooltip>
+            </Input.Group>
             <InputNumber<number>
               style={{ width: 200, marginTop: 7 }}
               defaultValue={1}
@@ -160,6 +176,23 @@ const Home: NextPage = () => {
             </Button>
           </div>}
       </div>
+      <Modal title="Basic Modal" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
+        <ContinuousQrScanner
+          onQrCode={(data) => {
+            if (WAValidator.validate(recipient, 'sol')) {
+              setRecipient(data);
+
+            } else {
+              toast.error('Invalid address')
+            }
+
+            setIsModalVisible(false)
+          }}
+          hidden={false}
+          style={{ maxWidth: "100%" }}
+        />
+
+      </Modal>
     </div>
   )
 }
