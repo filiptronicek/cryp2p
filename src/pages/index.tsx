@@ -1,5 +1,5 @@
 import type { NextPage } from 'next'
-import { Button, Divider, Input, InputNumber, Modal, Tabs, Tooltip } from 'antd';
+import { Button, Tabs } from 'antd';
 const { TabPane } = Tabs;
 
 import {
@@ -15,10 +15,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import { SystemProgram, Transaction } from '@solana/web3.js';
 import React, { useCallback, useEffect, useState } from 'react';
 
-import WAValidator from 'multicoin-address-validator';
-import { QrcodeOutlined } from '@ant-design/icons';
-import dynamic from 'next/dynamic';
-const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false })
+import SendTab from '../components/SendTab';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -155,34 +152,7 @@ const Home: NextPage = () => {
             <br />
             <Tabs defaultActiveKey="1" onChange={console.log}>
               <TabPane tab="Send" key="1">
-                <Input.Group compact>
-                  <Input style={{ width: 'calc(100% - 200px)' }}
-                    placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
-                  <Tooltip title="scan address">
-                    <Button icon={<QrcodeOutlined />} onClick={showModal} />
-                  </Tooltip>
-                </Input.Group>
-                <InputNumber<number>
-                  style={{ width: 200, marginTop: 7 }}
-                  defaultValue={1}
-                  min={0}
-                  max={10_000_000_000}
-                  step={0.1}
-                  onChange={(amnt) => {
-                    setAmount(amnt);
-                  }}
-                  addonAfter="SOL"
-                  stringMode={false}
-                />
-                <br />
-                <Button
-                  type="primary"
-                  onClick={sendMonies}
-                  style={{ marginTop: 15 }}
-                  disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
-                >
-                  Send
-                </Button>
+                <SendTab balance={balance} publicKey={publicKey} sendTransaction={sendTransaction} />
               </TabPane>
               <TabPane tab="Receive" key="2">
                 Content of Tab Pane 2
@@ -206,23 +176,6 @@ const Home: NextPage = () => {
             </Tabs>
           </div>}
       </div>
-      <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
-        {typeof window && isModalVisible && (
-          <BarcodeScannerComponent
-            width='100%'
-            height={500}
-            stopStream={!isModalVisible}
-            onUpdate={(err, result) => {
-              if (result) {
-                //@ts-ignore
-                setRecipient(result.text);
-                toast.success('Scanned successfully');
-                setIsModalVisible(false);
-              }
-            }}
-          />
-        )}
-      </Modal>
     </div>
   )
 }
