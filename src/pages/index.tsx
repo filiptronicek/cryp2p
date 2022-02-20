@@ -27,19 +27,19 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey
     const airdropSignature = await connection.requestAirdrop(
       publicKey,
       LAMPORTS_PER_SOL,
-    );
-    let i = 0;
-    const interval = setInterval(async () => {
-      if (++i > 100) {
-        reject();
-        clearInterval(interval);
-      }
-      if (await connection.getTransaction(airdropSignature, { commitment: 'confirmed' })) {
-        resolve('');
-        clearInterval(interval);
-      }
-    }, 250)
-    try {
+      ).catch(error => toast.error(error.message));
+      let i = 0;
+      const interval = setInterval(async () => {
+        if (++i > 25) {
+          reject();
+          clearInterval(interval);
+        }
+        if (await connection.getTransaction(airdropSignature, { commitment: 'confirmed' }).catch(e => {toast.error(e.message); clearInterval(interval)})) {
+          resolve('');
+          clearInterval(interval);
+        }
+      }, 250)
+      try {
       const sig = await connection.confirmTransaction(airdropSignature);
       if (sig.value.err) {
         reject(sig.value.err);
