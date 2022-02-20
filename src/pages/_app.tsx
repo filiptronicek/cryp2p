@@ -52,7 +52,6 @@ function MyApp({ Component, pageProps }: AppProps) {
         <WalletModalProvider>
           <WalletMultiButton />
           <Component {...pageProps} />
-          { /* Your app's components go here, nested within the context providers. */}
         </WalletModalProvider>
       </WalletProvider>
     </ConnectionProvider>

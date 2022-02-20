@@ -16,7 +16,8 @@ import React, { useCallback, useEffect, useState } from 'react';
 
 import WAValidator from 'multicoin-address-validator';
 import { QrcodeOutlined } from '@ant-design/icons';
-import { ContinuousQrScanner } from 'react-webcam-qr-scanner.ts';
+import dynamic from 'next/dynamic';
+const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), {ssr: false})
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -176,22 +177,21 @@ const Home: NextPage = () => {
             </Button>
           </div>}
       </div>
-      <Modal title="Basic Modal" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
-        <ContinuousQrScanner
-          onQrCode={(data) => {
-            if (WAValidator.validate(recipient, 'sol')) {
-              setRecipient(data);
-
-            } else {
-              toast.error('Invalid address')
-            }
-
-            setIsModalVisible(false)
-          }}
-          hidden={false}
-          style={{ maxWidth: "100%" }}
-        />
-
+      <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
+        {typeof window && (
+          <BarcodeScannerComponent
+            width={500}
+            height={500}
+            stopStream={isModalVisible}
+            onUpdate={(err, result) => {
+              if (result) {
+                console.debug()
+                setRecipient(result.text);
+                setIsModalVisible(false)
+              }
+            }}
+          />
+        )}
       </Modal>
     </div>
   )

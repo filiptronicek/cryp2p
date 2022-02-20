@@ -21,7 +21,7 @@
     "react": "^17.0.2",
     "react-dom": "17.0.2",
     "react-hot-toast": "^2.2.0",
-    "react-webcam-qr-scanner.ts": "^1.0.4"
+    "react-qr-barcode-scanner": "^1.0.6"
   },
   "devDependencies": {
     "@types/multicoin-address-validator": "^0.5.0",
