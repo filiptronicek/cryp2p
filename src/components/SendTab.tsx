@@ -7,6 +7,7 @@ import WAValidator from "multicoin-address-validator";
 import dynamic from "next/dynamic";
 import { useState, useCallback } from "react";
 import toast from "react-hot-toast";
+import { truncate } from "../lib/address";
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false })
 
 export default function SendTab(
@@ -22,7 +23,7 @@ export default function SendTab(
         }) {
     const { connection } = useConnection();
     const [amount, setAmount] = useState(0);
-    const [recipient, setRecipient] = useState('');
+    const [recipient, setRecipient] = useState('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC');
     const [sent, setSent] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -37,7 +38,7 @@ export default function SendTab(
         const transaction = new Transaction().add(
             SystemProgram.transfer({
                 fromPubkey: publicKey,
-                toPubkey: new PublicKey('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC'),
+                toPubkey: new PublicKey(recipient),
                 lamports: amount * LAMPORTS_PER_SOL,
             })
         );
@@ -108,8 +109,7 @@ export default function SendTab(
             ) : (
                 <Result
                     status="success"
-                    title="Successfully Purchased Cloud Server ECS!"
-                    subTitle="Order number: 2017182818828182881 Cloud server configuration takes 1-5 minutes, please wait."
+                    title={`Successfully sent ${amount} SOL to ${truncate(recipient)}`}
                     extra={[
                         <Button type="primary" key="close" onClick={() => setSent(false)}>
                             Send more

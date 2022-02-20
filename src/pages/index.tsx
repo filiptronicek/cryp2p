@@ -59,16 +59,7 @@ const Home: NextPage = () => {
 
   const { connection } = useConnection();
   const { publicKey, sendTransaction } = useWallet();
-  const [amount, setAmount] = useState(0);
-  const [recipient, setRecipient] = useState('');
   const [balance, setBalance] = useState<null | number>(null);
-
-  const [isModalVisible, setIsModalVisible] = useState(false);
-
-  const showModal = () => {
-    setIsModalVisible(true);
-    setRecipient('');
-  };
 
   const getBalance = async () => {
     if (publicKey) {
@@ -86,47 +77,6 @@ const Home: NextPage = () => {
       }, 'confirmed')
     }
   }, [publicKey])
-
-  const sendMonies = useCallback(async () => {
-    if (!publicKey) throw new WalletNotConnectedError();
-    const transaction = new Transaction().add(
-      SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: new PublicKey('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC'),
-        lamports: amount * LAMPORTS_PER_SOL,
-      })
-    );
-
-    const signature = await sendTransaction(transaction, connection);
-
-    getBalance().then((balance) => setBalance(balance));
-
-    toast.promise(new Promise(async (resolve, reject) => {
-      let i = 0;
-      const interval = setInterval(async () => {
-        if (++i > 100) {
-          reject();
-          clearInterval(interval);
-        }
-
-        if (await connection.getTransaction(signature, { commitment: 'confirmed' })) {
-          resolve('');
-          clearInterval(interval);
-        }
-      }, 250)
-    }), {
-      loading: 'Sending tokens',
-      success: <>Tokens sent.&nbsp;<a target="_blank" href={`https://solscan.io/tx/${signature}?cluster=devnet`}>View transaction</a></>,
-      error: 'Error while sending test tokens',
-    }, {
-      duration: 5000,
-    });
-
-    // We catch and don't do anything with errors because they happen on every transaction for some reason
-    const info = await connection.confirmTransaction(signature, 'confirmed').catch(() => { });
-
-    console.log(info);
-  }, [publicKey, sendTransaction, connection, amount]);
 
   return (
     <div style={{
