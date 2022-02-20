@@ -1,5 +1,6 @@
 import type { NextPage } from 'next'
-import { Button, Divider, Input, InputNumber, Modal, Tooltip } from 'antd';
+import { Button, Divider, Input, InputNumber, Modal, Tabs, Tooltip } from 'antd';
+const { TabPane } = Tabs;
 
 import {
   clusterApiUrl,
@@ -142,7 +143,7 @@ const Home: NextPage = () => {
 
       <div>
         {!publicKey && (
-          <span>Please log in first</span>
+          <span>Please connect your wallet first</span>
         )}
 
         {publicKey &&
@@ -152,42 +153,57 @@ const Home: NextPage = () => {
               <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString()} SOL</p>
             )}
             <br />
-            <Input.Group compact>
-              <Input style={{ width: 'calc(100% - 200px)' }}
-                placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
-
-              <Tooltip title="scan address">
-                <Button icon={<QrcodeOutlined />} onClick={showModal} />
-              </Tooltip>
-            </Input.Group>
-            <InputNumber<number>
-              style={{ width: 200, marginTop: 7 }}
-              defaultValue={1}
-              min={0}
-              max={10_000_000_000}
-              step={0.1}
-              onChange={(amnt) => {
-                setAmount(amnt);
-              }}
-              addonAfter="SOL"
-              stringMode={false}
-            />
-            <br />
-            <Button
-              type="primary"
-              onClick={sendMonies}
-              style={{ marginTop: 15 }}
-              disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
-            >
-              Send
-            </Button>
-            <Divider orientationMargin={20}></Divider>
-            <Button
-              type="primary"
-              onClick={() => { getTestTokens('devnet', publicKey) }}
-            >
-              Get tokens
-            </Button>
+            <Tabs defaultActiveKey="1" onChange={console.log}>
+              <TabPane tab="Send" key="1">
+                <Input.Group compact>
+                  <Input style={{ width: 'calc(100% - 200px)' }}
+                    placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
+                  <Tooltip title="scan address">
+                    <Button icon={<QrcodeOutlined />} onClick={showModal} />
+                  </Tooltip>
+                </Input.Group>
+                <InputNumber<number>
+                  style={{ width: 200, marginTop: 7 }}
+                  defaultValue={1}
+                  min={0}
+                  max={10_000_000_000}
+                  step={0.1}
+                  onChange={(amnt) => {
+                    setAmount(amnt);
+                  }}
+                  addonAfter="SOL"
+                  stringMode={false}
+                />
+                <br />
+                <Button
+                  type="primary"
+                  onClick={sendMonies}
+                  style={{ marginTop: 15 }}
+                  disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
+                >
+                  Send
+                </Button>
+              </TabPane>
+              <TabPane tab="Receive" key="2">
+                Content of Tab Pane 2
+              </TabPane>
+              <TabPane tab="Address book" key="3">
+                <Button
+                  type="primary"
+                  onClick={() => { getTestTokens('devnet', publicKey) }}
+                >
+                  Get tokens
+                </Button>
+              </TabPane>
+              <TabPane tab="Faucet" key="4">
+                <Button
+                  type="primary"
+                  onClick={() => { getTestTokens('devnet', publicKey) }}
+                >
+                  Get tokens
+                </Button>
+              </TabPane>
+            </Tabs>
           </div>}
       </div>
       <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
