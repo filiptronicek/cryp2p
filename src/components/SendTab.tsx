@@ -5,8 +5,9 @@ import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } f
 import { Input, Tooltip, Button, InputNumber, Result, Modal } from "antd";
 import WAValidator from "multicoin-address-validator";
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
+import { useSolanaPrice } from "../hooks/useSolanaPrice";
 import { truncate } from "../lib/address";
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false })
 
@@ -27,6 +28,17 @@ export default function SendTab(
     const [sent, setSent] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    
+    const [priceUpdated, setPriceUpdated] = useState(Date.now());
+    const price = useSolanaPrice(priceUpdated);
+
+    useEffect(() => {
+        const interval = setInterval(() => {
+          setPriceUpdated(Date.now());
+        }, 25_000);
+      
+        return () => clearInterval(interval);
+      }, []);
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -84,6 +96,7 @@ export default function SendTab(
                             <Button icon={<QrcodeOutlined />} onClick={showModal} />
                         </Tooltip>
                     </Input.Group>
+                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em'}}>
                     <InputNumber<number>
                         style={{ width: 200, marginTop: 7 }}
                         defaultValue={1}
@@ -95,7 +108,8 @@ export default function SendTab(
                         }}
                         addonAfter="SOL"
                         stringMode={false}
-                    />
+                    />  ~ ${(price * amount).toLocaleString()}
+                    </div>
                     <br />
                     <Button
                         type="primary"
