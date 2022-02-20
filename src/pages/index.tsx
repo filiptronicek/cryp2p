@@ -17,7 +17,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import WAValidator from 'multicoin-address-validator';
 import { QrcodeOutlined } from '@ant-design/icons';
 import dynamic from 'next/dynamic';
-const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), {ssr: false})
+const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false })
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -27,11 +27,26 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey
       publicKey,
       LAMPORTS_PER_SOL,
     );
-    const sig = await connection.confirmTransaction(airdropSignature);
-    if (sig.value.err) {
-      reject(sig.value.err);
+    let i = 0;
+    const interval = setInterval(async () => {
+      if (++i > 100) {
+        reject();
+        clearInterval(interval);
+      }
+      if (await connection.getTransaction(airdropSignature, { commitment: 'confirmed' })) {
+        resolve('');
+        clearInterval(interval);
+      }
+    }, 250)
+    try {
+      const sig = await connection.confirmTransaction(airdropSignature);
+      if (sig.value.err) {
+        reject(sig.value.err);
+      }
+      resolve('success')
+    } catch (error) {
+      reject('');
     }
-    resolve('success')
 
   }), {
     loading: 'Sending you tokens',
@@ -65,7 +80,6 @@ const Home: NextPage = () => {
     return null;
   }
 
-
   useEffect(() => {
     getBalance().then((balance) => setBalance(balance));
     if (publicKey) {
@@ -92,7 +106,6 @@ const Home: NextPage = () => {
     toast.promise(new Promise(async (resolve, reject) => {
       let i = 0;
       const interval = setInterval(async () => {
-        console.log(i);
         if (++i > 100) {
           reject();
           clearInterval(interval);
