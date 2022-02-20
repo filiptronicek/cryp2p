@@ -178,16 +178,17 @@ const Home: NextPage = () => {
           </div>}
       </div>
       <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
-        {typeof window && (
+        {typeof window && isModalVisible && (
           <BarcodeScannerComponent
-            width={500}
+            width='100%'
             height={500}
-            stopStream={isModalVisible}
+            stopStream={!isModalVisible}
             onUpdate={(err, result) => {
               if (result) {
-                console.debug()
+                //@ts-ignore
                 setRecipient(result.text);
-                setIsModalVisible(false)
+                toast.success('Scanned successfully');
+                setIsModalVisible(false);
               }
             }}
           />
