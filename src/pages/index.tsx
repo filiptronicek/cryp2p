@@ -10,12 +10,11 @@ import {
 } from "@solana/web3.js";
 import toast, { Toaster } from 'react-hot-toast';
 
-import { WalletNotConnectedError } from '@solana/wallet-adapter-base';
 import { useConnection, useWallet } from '@solana/wallet-adapter-react';
-import { SystemProgram, Transaction } from '@solana/web3.js';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import SendTab from '../components/SendTab';
+import { useSolanaPrice } from '../hooks/useSolanaPrice';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -69,6 +68,9 @@ const Home: NextPage = () => {
     return null;
   }
 
+  const [priceUpdated, setPriceUpdated] = useState(Date.now());
+  const price = useSolanaPrice(priceUpdated);
+
   useEffect(() => {
     getBalance().then((balance) => setBalance(balance));
     if (publicKey) {
@@ -76,6 +78,11 @@ const Home: NextPage = () => {
         getBalance().then((balance) => setBalance(balance));
       }, 'confirmed')
     }
+    const interval = setInterval(() => {
+      setPriceUpdated(Date.now());
+    }, 60_000);
+  
+    return () => clearInterval(interval);
   }, [publicKey])
 
   return (
@@ -97,12 +104,12 @@ const Home: NextPage = () => {
           <div>
             <p>Connected account: {publicKey.toString()}</p>
             {balance && (
-              <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString()} SOL</p>
+              <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString(undefined, {minimumSignificantDigits: 5, maximumSignificantDigits: 7})} SOL (${((price * balance) / LAMPORTS_PER_SOL).toLocaleString(undefined, {maximumFractionDigits: 4})})</p>
             )}
             <br />
             <Tabs defaultActiveKey="1" onChange={console.log}>
               <TabPane tab="Send" key="1">
-                <SendTab balance={balance} publicKey={publicKey} sendTransaction={sendTransaction} />
+                <SendTab balance={balance} publicKey={publicKey} sendTransaction={sendTransaction} price={price} />
               </TabPane>
               <TabPane tab="Receive" key="2">
                 Content of Tab Pane 2

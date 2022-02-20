@@ -7,7 +7,6 @@ import WAValidator from "multicoin-address-validator";
 import dynamic from "next/dynamic";
 import { useState, useCallback, useEffect } from "react";
 import toast from "react-hot-toast";
-import { useSolanaPrice } from "../hooks/useSolanaPrice";
 import { truncate } from "../lib/address";
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false })
 
@@ -15,12 +14,14 @@ export default function SendTab(
     {
         sendTransaction,
         publicKey,
-        balance
+        balance,
+        price
     }:
         {
             sendTransaction: (transaction: Transaction, connection: Connection, options?: SendTransactionOptions | undefined) => Promise<string>;
             publicKey: PublicKey;
             balance: number | null;
+            price: number
         }) {
     const { connection } = useConnection();
     const [amount, setAmount] = useState(0);
@@ -28,17 +29,6 @@ export default function SendTab(
     const [sent, setSent] = useState(false);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
-    
-    const [priceUpdated, setPriceUpdated] = useState(Date.now());
-    const price = useSolanaPrice(priceUpdated);
-
-    useEffect(() => {
-        const interval = setInterval(() => {
-          setPriceUpdated(Date.now());
-        }, 25_000);
-      
-        return () => clearInterval(interval);
-      }, []);
 
     const showModal = () => {
         setIsModalVisible(true);
