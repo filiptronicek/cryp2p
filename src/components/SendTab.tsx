@@ -40,10 +40,12 @@ export default function SendTab(
 
     const selectAfter = (
         <Select defaultValue="SOL" style={{ width: 80 }} onChange={(e) => {
-            console.log(e)
             switch (e) {
                 case 'USD':
                     setAmount(amount * price);
+                    break;
+                case 'SOL':
+                    setAmount(amount / price);
                     break;
                 }
             setCurrentCurrency(e);
