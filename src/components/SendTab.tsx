@@ -3,9 +3,9 @@ import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-
 import { useConnection } from "@solana/wallet-adapter-react";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
 import { Input, Tooltip, Button, InputNumber, Result, Modal, Select } from "antd";
-import WAValidator from "multicoin-address-validator";
+import { getDefaultProvider } from "ethers";
 import dynamic from "next/dynamic";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { truncate } from "../lib/address";
 
@@ -27,11 +27,33 @@ export default function SendTab(
         }) {
     const { connection } = useConnection();
     const [amount, setAmount] = useState(0);
+    const [isAddressValid, setIsAddressValid] = useState(false);
     const [recipient, setRecipient] = useState('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC');
     const [sent, setSent] = useState(false);
     const [currentCurrency, setCurrentCurrency] = useState('SOL');
+    const provider = getDefaultProvider();
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+
+    useMemo(async () => {
+        if (!recipient || recipient === publicKey.toString()) {
+            setIsAddressValid(false);
+            return;
+        }
+
+        try {
+            if (!(await provider.resolveName(recipient))) {
+                setIsAddressValid(false);
+                return;
+            }
+        } catch {
+            setIsAddressValid(false);
+            return;
+        }
+
+        toast(await provider.resolveName(recipient));
+        setIsAddressValid(true);
+    }, [recipient]);
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -47,13 +69,13 @@ export default function SendTab(
                 case 'SOL':
                     setAmount(amount / price);
                     break;
-                }
+            }
             setCurrentCurrency(e);
         }}>
-          <Option value="SOL">SOL</Option>
-          <Option value="USD">USD</Option>
+            <Option value="SOL">SOL</Option>
+            <Option value="USD">USD</Option>
         </Select>
-      );
+    );
 
     const sendMonies = useCallback(async () => {
         if (!publicKey) throw new WalletNotConnectedError();
@@ -106,27 +128,27 @@ export default function SendTab(
                             <Button icon={<QrcodeOutlined />} onClick={showModal} />
                         </Tooltip>
                     </Input.Group>
-                    <div style={{display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em'}}>
-                    <InputNumber<number>
-                        style={{ width: 200, marginTop: 7 }}
-                        defaultValue={1}
-                        value={amount}
-                        min={0}
-                        max={balance && currentCurrency === "SOL" ? balance / LAMPORTS_PER_SOL : Infinity}
-                        step={0.1}
-                        onChange={(amnt) => {
-                            setAmount(amnt);
-                        }}
-                        addonAfter={selectAfter}
-                        stringMode={false}
-                    /> {currentCurrency === 'SOL' && <> ~ ${(price * amount).toLocaleString()}</>}
+                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em' }}>
+                        <InputNumber<number>
+                            style={{ width: 200, marginTop: 7 }}
+                            defaultValue={1}
+                            value={amount}
+                            min={0}
+                            max={balance && currentCurrency === "SOL" ? balance / LAMPORTS_PER_SOL : Infinity}
+                            step={0.1}
+                            onChange={(amnt) => {
+                                setAmount(amnt);
+                            }}
+                            addonAfter={selectAfter}
+                            stringMode={false}
+                        /> {currentCurrency === 'SOL' && <> ~ ${(price * amount).toLocaleString()}</>}
                     </div>
                     <br />
                     <Button
                         type="primary"
                         onClick={sendMonies}
                         style={{ marginTop: 15 }}
-                        disabled={!recipient || recipient === publicKey.toString() || !WAValidator.validate(recipient, 'sol')}
+                        disabled={!isAddressValid}
                     >
                         Send
                     </Button>
@@ -144,7 +166,7 @@ export default function SendTab(
             )}
 
             <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
-            {typeof window && isModalVisible && (
+                {typeof window && isModalVisible && (
                     <BarcodeScannerComponent
                         width='100%'
                         height={500}
