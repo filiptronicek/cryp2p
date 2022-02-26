@@ -238,11 +238,13 @@ export default function SendTab(
                                 title="Your browser does not support scanning NFC tags."
                                 extra={
                                     <>
-                                        <Button type="primary" key="console">
-                                            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
-                                                Scan with our iOS app
-                                            </a>
-                                        </Button>
+                                        {(navigator.userAgentData && navigator.userAgentData.platform === "iOS") || window.navigator.platform === "iOS" && (
+                                            <Button type="primary" key="console">
+                                                <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                                                    Scan with our iOS app
+                                                </a>
+                                            </Button>
+                                        )}
                                         <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
                                             Close scanner
                                         </Button>
