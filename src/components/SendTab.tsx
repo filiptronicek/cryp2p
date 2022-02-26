@@ -3,7 +3,7 @@ import { EtherscanProvider } from "@ethersproject/providers";
 import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
-import { Input, Button, InputNumber, Result, Modal, Select } from "antd";
+import { Input, Button, InputNumber, Result, Modal, Select, Divider } from "antd";
 import { getDefaultProvider } from "ethers";
 import dynamic from "next/dynamic";
 import { useState, useCallback, useMemo } from "react";
@@ -163,35 +163,45 @@ export default function SendTab(
             {!sent ? (
                 <>
                     <Input.Group compact>
-                        <Input style={{ width: 'calc(100% - 200px)' }}
-                            placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
+                        <label>
+                            Enter your desired destination address
+                            <Input style={{ width: 'calc(100% - 200px)' }}
+                                placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
+                        </label>
                     </Input.Group>
 
-                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                    <Divider dashed={true} />
+                    OR
+
+                    <div style={{ display: 'flex', flexDirection: 'row', marginTop: 50, marginBottom: 50, gap: 20 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => showModal(ScanTypes.QR)}>
-                            <MdOutlineQrCode size={150} />
+                            <MdOutlineQrCode size={100} />
                             Scan QR Code
                         </div>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => showModal(ScanTypes.NFC)}>
-                            <MdOutlineNfc size={150} />
+                            <MdOutlineNfc size={100} />
                             Scan NFC tag
                         </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em' }}>
-                        <InputNumber<number>
-                            style={{ width: 200, marginTop: 7 }}
-                            defaultValue={1}
-                            value={amount}
-                            min={0}
-                            max={balance && currentCurrency === "SOL" ? balance / LAMPORTS_PER_SOL : Infinity}
-                            step={0.1}
-                            onChange={(amnt) => {
-                                setAmount(amnt);
-                            }}
-                            addonAfter={selectAfter}
-                            stringMode={false}
-                        /> {currentCurrency === 'SOL' && <> ~ ${(price * amount).toLocaleString()}</>}
-                    </div>
+
+                    <label>
+                        Enter your desired amount
+                        <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em' }}>
+                            <InputNumber<number>
+                                style={{ width: 200, marginTop: 7 }}
+                                defaultValue={1}
+                                value={amount}
+                                min={0}
+                                max={balance && currentCurrency === "SOL" ? balance / LAMPORTS_PER_SOL : Infinity}
+                                step={0.1}
+                                onChange={(amnt) => {
+                                    setAmount(amnt);
+                                }}
+                                addonAfter={selectAfter}
+                                stringMode={false}
+                            /> {currentCurrency === 'SOL' && <> ~ ${(price * amount).toLocaleString()}</>}
+                        </div>
+                    </label>
                     <br />
                     <Button
                         type="primary"
