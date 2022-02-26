@@ -3,15 +3,17 @@ import { EtherscanProvider } from "@ethersproject/providers";
 import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
-import { Input, Tooltip, Button, InputNumber, Result, Modal, Select } from "antd";
+import { Input, Tooltip, Button, InputNumber, Result, Modal, Select, Steps } from "antd";
 import { getDefaultProvider } from "ethers";
 import dynamic from "next/dynamic";
 import { useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { truncate } from "../lib/address";
+import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
 
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
+const { Step } = Steps;
 
 function validateSolAddress(address: string) {
     try {
@@ -43,7 +45,16 @@ export default function SendTab(
     const [currentCurrency, setCurrentCurrency] = useState('SOL');
     const provider = new EtherscanProvider(undefined, process.env.ETHERSCAN_KEY);
 
+    const [cameraPermission, setCameraPermission] = useState(false);
+    const [nfcPermission, setNfcPermission] = useState(false);
+
+    enum ScanTypes {
+        NFC = 'nfc',
+        QR = 'qr'
+    }
+
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [scanningMode, setScanningMode] = useState<ScanTypes>(ScanTypes.QR)
 
     useMemo(async () => {
         if (recipient && recipient !== publicKey.toString() && validateSolAddress(recipient)) {
@@ -70,9 +81,25 @@ export default function SendTab(
         setIsAddressValid(true);
     }, [recipient]);
 
-    const showModal = () => {
+    const showModal = async (type: ScanTypes) => {
+
         setIsModalVisible(true);
-        setRecipient('');
+
+        switch (type) {
+            case ScanTypes.NFC: {
+                if (!('NDEFReader' in window)) {
+                    setNfcPermission(false);
+                    break
+                };
+
+                //@ts-ignore
+                const nfcPermissionStatus = await navigator.permissions.query({ name: "nfc" });
+                setNfcPermission(nfcPermissionStatus.state === 'granted');
+                break;
+            }
+        }
+
+        setScanningMode(type);
     };
 
     const selectAfter = (
@@ -139,10 +166,18 @@ export default function SendTab(
                     <Input.Group compact>
                         <Input style={{ width: 'calc(100% - 200px)' }}
                             placeholder={publicKey.toString()} value={recipient} onChange={(e) => { setRecipient(e.target.value); }} suffix />
-                        <Tooltip title="scan address">
-                            <Button icon={<QrcodeOutlined />} onClick={showModal} />
-                        </Tooltip>
                     </Input.Group>
+
+                    <div style={{ display: 'flex', flexDirection: 'row' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => showModal(ScanTypes.QR)}>
+                            <MdOutlineQrCode size={150} />
+                            Scan QR Code
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', cursor: 'pointer' }} onClick={() => showModal(ScanTypes.NFC)}>
+                            <MdOutlineNfc size={150} />
+                            Scan NFC tag
+                        </div>
+                    </div>
                     <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: '2em' }}>
                         <InputNumber<number>
                             style={{ width: 200, marginTop: 7 }}
@@ -181,7 +216,7 @@ export default function SendTab(
             )}
 
             <Modal title="Scan SOL address" visible={isModalVisible} onOk={() => setIsModalVisible(false)} onCancel={() => setIsModalVisible(false)}>
-                {typeof window && isModalVisible && (
+                {typeof window && isModalVisible && scanningMode === ScanTypes.QR && (
                     <BarcodeScannerComponent
                         width='100%'
                         height={500}
@@ -195,6 +230,54 @@ export default function SendTab(
                             }
                         }}
                     />
+                )}
+                {typeof window && isModalVisible && scanningMode === ScanTypes.NFC && (
+                    <>
+                        {!('NDEFReader' in window) && (
+                            <Result
+                                status="error"
+                                title="Your browser does not support scanning NFC tags."
+                                extra={
+                                    <>
+                                        <Button type="primary" key="console">
+                                            <a href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">
+                                                Scan with our iOS app
+                                            </a>
+                                        </Button>
+                                        <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
+                                            Close scanner
+                                        </Button>
+                                    </>
+                                }
+                            />
+                        )}
+                        {!nfcPermission && ('NDEFReader' in window) && (
+                            <Result
+                                status="error"
+                                title="You denied access to scanning."
+                                extra={
+                                    <>
+                                        <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
+                                            Close scanner
+                                        </Button>
+                                    </>
+                                }
+                            />
+                        )}
+                        {nfcPermission && (
+                            <Result
+                                status="error"
+                                title="You denied access to scanning."
+                                extra={
+                                    <>
+                                        <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
+                                            Close scanner
+                                        </Button>
+                                    </>
+                                }
+                            />
+                        )}
+                    </>
                 )}
             </Modal>
         </>

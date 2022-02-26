@@ -14,7 +14,7 @@ import { useConnection, useWallet } from '@solana/wallet-adapter-react';
 import React, { useEffect, useState } from 'react';
 
 import SendTab from '../components/SendTab';
-import { useSolanaPrice } from '../hooks/useSolanaPrice';
+import { useSolanaPrice } from '../components/hooks/useSolanaPrice';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   let connection = new Connection(clusterApiUrl(network));
@@ -23,19 +23,19 @@ const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey
     const airdropSignature = await connection.requestAirdrop(
       publicKey,
       LAMPORTS_PER_SOL,
-      ).catch(error => toast.error(error.message));
-      let i = 0;
-      const interval = setInterval(async () => {
-        if (++i > 25) {
-          reject();
-          clearInterval(interval);
-        }
-        if (await connection.getTransaction(airdropSignature, { commitment: 'confirmed' }).catch(e => {toast.error(e.message); clearInterval(interval)})) {
-          resolve('');
-          clearInterval(interval);
-        }
-      }, 250)
-      try {
+    ).catch(error => toast.error(error.message));
+    let i = 0;
+    const interval = setInterval(async () => {
+      if (++i > 25) {
+        reject();
+        clearInterval(interval);
+      }
+      if (await connection.getTransaction(airdropSignature, { commitment: 'confirmed' }).catch(e => { toast.error(e.message); clearInterval(interval) })) {
+        resolve('');
+        clearInterval(interval);
+      }
+    }, 250)
+    try {
       const sig = await connection.confirmTransaction(airdropSignature);
       if (sig.value.err) {
         reject(sig.value.err);
@@ -81,7 +81,7 @@ const Home: NextPage = () => {
     const interval = setInterval(() => {
       setPriceUpdated(Date.now());
     }, 60_000);
-  
+
     return () => clearInterval(interval);
   }, [publicKey])
 
@@ -104,7 +104,7 @@ const Home: NextPage = () => {
           <div>
             <p>Connected account: {publicKey.toString()}</p>
             {balance && (
-              <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString(undefined, {minimumSignificantDigits: 5, maximumSignificantDigits: 7})} SOL (${((price * balance) / LAMPORTS_PER_SOL).toLocaleString(undefined, {maximumFractionDigits: 4})})</p>
+              <p>Your balance: {(balance / LAMPORTS_PER_SOL).toLocaleString(undefined, { minimumSignificantDigits: 5, maximumSignificantDigits: 7 })} SOL (${((price * balance) / LAMPORTS_PER_SOL).toLocaleString(undefined, { maximumFractionDigits: 4 })})</p>
             )}
             <br />
             <Tabs defaultActiveKey="1" onChange={console.log}>
