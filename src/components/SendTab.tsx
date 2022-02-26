@@ -40,7 +40,7 @@ export default function SendTab(
     const [amount, setAmount] = useState(0);
     const [isAddressValid, setIsAddressValid] = useState(false);
     const [recipient, setRecipient] = useState('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC');
-    const [sent, setSent] = useState(false);
+    const [sent, setSent] = useState<boolean | string>(false);
     const [currentCurrency, setCurrentCurrency] = useState('SOL');
     const provider = new EtherscanProvider(undefined, process.env.ETHERSCAN_KEY);
 
@@ -139,7 +139,7 @@ export default function SendTab(
                 }
 
                 if (await connection.getTransaction(signature, { commitment: 'confirmed' })) {
-                    setSent(true);
+                    setSent(signature);
                     resolve('');
                     clearInterval(interval);
                 }
@@ -220,6 +220,11 @@ export default function SendTab(
                         <Button type="primary" key="close" onClick={() => setSent(false)}>
                             Send more
                         </Button>,
+                        <Button type="primary" key="close">
+                            <a href={`https://solscan.io/tx/${sent}?cluster=devnet`} target="_blank" rel="noopener noreferrer">
+                                View tx on solscan
+                            </a>
+                        </Button>
                     ]}
                 />
             )}
