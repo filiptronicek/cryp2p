@@ -24,11 +24,13 @@ export const useSolanaPrice = (
 ): number => {
     const [price, setSolPrice] = useState<number>(0);
     const getPrice = async () => {
-        const response = await fetch('https://api.coincap.io/v2/assets/solana');
-        if (response.ok) {
-            const data: CoincapResponse = await response.json();
-            setSolPrice(parseFloat(data.data.priceUsd));
-        }
+        try {
+            const response = await fetch('https://api.coincap.io/v2/assets/solana');
+            if (response.ok) {
+                const data: CoincapResponse = await response.json();
+                setSolPrice(parseFloat(data.data.priceUsd));
+            }
+        } catch { }
     }
 
     useEffect(() => {

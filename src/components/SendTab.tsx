@@ -3,7 +3,7 @@ import { EtherscanProvider } from "@ethersproject/providers";
 import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
-import { Input, Tooltip, Button, InputNumber, Result, Modal, Select, Steps } from "antd";
+import { Input, Button, InputNumber, Result, Modal, Select } from "antd";
 import { getDefaultProvider } from "ethers";
 import dynamic from "next/dynamic";
 import { useState, useCallback, useMemo } from "react";
@@ -13,7 +13,6 @@ import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
 
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
-const { Step } = Steps;
 
 function validateSolAddress(address: string) {
     try {
@@ -221,7 +220,7 @@ export default function SendTab(
                         width='100%'
                         height={500}
                         stopStream={!isModalVisible}
-                        onUpdate={(err, result) => {
+                        onUpdate={(_err, result) => {
                             if (result) {
                                 //@ts-ignore
                                 setRecipient(result.text);
