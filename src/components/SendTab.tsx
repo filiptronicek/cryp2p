@@ -1,4 +1,5 @@
 import { QrcodeOutlined } from "@ant-design/icons";
+import { EtherscanProvider } from "@ethersproject/providers";
 import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } from "@solana/web3.js";
@@ -11,6 +12,15 @@ import { truncate } from "../lib/address";
 
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
+
+function validateSolAddress(address: string) {
+    try {
+        const pubkey = new PublicKey(address);
+        return PublicKey.isOnCurve(pubkey.toBuffer());
+    } catch (error) {
+        return false;
+    }
+}
 
 export default function SendTab(
     {
@@ -31,27 +41,32 @@ export default function SendTab(
     const [recipient, setRecipient] = useState('57xndEKxm8hjinu81YAzakxWiC2u7AxS7rZyC2y2KfDC');
     const [sent, setSent] = useState(false);
     const [currentCurrency, setCurrentCurrency] = useState('SOL');
-    const provider = getDefaultProvider();
+    const provider = new EtherscanProvider(undefined, process.env.ETHERSCAN_KEY);
 
     const [isModalVisible, setIsModalVisible] = useState(false);
 
     useMemo(async () => {
-        if (!recipient || recipient === publicKey.toString()) {
-            setIsAddressValid(false);
+        if (recipient && recipient !== publicKey.toString() && validateSolAddress(recipient)) {
+            setIsAddressValid(true);
             return;
         }
 
         try {
-            if (!(await provider.resolveName(recipient))) {
+            const address = await provider.resolveName(recipient);
+            const resolver = await provider.getResolver(recipient);
+
+            if (!address) {
                 setIsAddressValid(false);
                 return;
             }
+
+            //TODO(ft): ge the SOL addresss, somehow
+            console.log(await resolver?.getText('SOL'))
         } catch {
             setIsAddressValid(false);
             return;
         }
 
-        toast(await provider.resolveName(recipient));
         setIsAddressValid(true);
     }, [recipient]);
 
