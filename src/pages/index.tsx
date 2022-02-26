@@ -17,7 +17,7 @@ import SendTab from '../components/SendTab';
 import { useSolanaPrice } from '../components/hooks/useSolanaPrice';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
-  let connection = new Connection(clusterApiUrl(network));
+  const connection = new Connection(clusterApiUrl(network));
 
   toast.promise(new Promise(async (resolve, reject) => {
     const airdropSignature = await connection.requestAirdrop(
