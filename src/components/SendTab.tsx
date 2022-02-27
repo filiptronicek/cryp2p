@@ -1,4 +1,3 @@
-import { QrcodeOutlined } from "@ant-design/icons";
 import { EtherscanProvider } from "@ethersproject/providers";
 import { SendTransactionOptions, WalletNotConnectedError } from "@solana/wallet-adapter-base";
 import { useConnection } from "@solana/wallet-adapter-react";

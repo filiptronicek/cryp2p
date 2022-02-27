@@ -15,6 +15,7 @@ import React, { useEffect, useState } from 'react';
 
 import SendTab from '../components/SendTab';
 import { useSolanaPrice } from '../components/hooks/useSolanaPrice';
+import AddressBook from '../components/AddressBook';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   const connection = new Connection(clusterApiUrl(network));
@@ -115,12 +116,7 @@ const Home: NextPage = () => {
                 Content of Tab Pane 2
               </TabPane>
               <TabPane tab="Address book" key="3">
-                <Button
-                  type="primary"
-                  onClick={() => { getTestTokens('devnet', publicKey) }}
-                >
-                  Get tokens
-                </Button>
+                <AddressBook />
               </TabPane>
               <TabPane tab="Faucet" key="4">
                 <Button
