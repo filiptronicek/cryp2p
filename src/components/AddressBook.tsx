@@ -1,4 +1,4 @@
-import { Button, Card, Divider, Form, Input, Modal, Skeleton, Space } from "antd";
+import { Button, Card, Divider, Form, Input, Modal, Skeleton } from "antd";
 import Meta from "antd/lib/card/Meta";
 import { SettingOutlined, DeleteOutlined, CopyOutlined, PlusSquareFilled } from "@ant-design/icons";
 import { truncate } from "../lib/address";
@@ -7,7 +7,7 @@ import { useCopyToClipboard, useLocalStorage } from 'usehooks-ts'
 import toast from "react-hot-toast";
 import { validateSolAddress } from "./SendTab";
 
-interface Contact {
+export interface Contact {
     name: string,
     address: string,
 }
