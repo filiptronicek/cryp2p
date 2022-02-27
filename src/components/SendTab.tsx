@@ -13,7 +13,7 @@ import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
 
-function validateSolAddress(address: string) {
+export function validateSolAddress(address: string) {
     try {
         const pubkey = new PublicKey(address);
         return PublicKey.isOnCurve(pubkey.toBuffer());
