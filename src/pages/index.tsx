@@ -16,6 +16,7 @@ import React, { useEffect, useState } from 'react';
 import SendTab from '../components/SendTab';
 import { useSolanaPrice } from '../components/hooks/useSolanaPrice';
 import AddressBook from '../components/AddressBook';
+import TransactionsTab from '../components/TransactionsTab';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   const connection = new Connection(clusterApiUrl(network));
@@ -75,6 +76,7 @@ const Home: NextPage = () => {
   useEffect(() => {
     getBalance().then((balance) => setBalance(balance));
     if (publicKey) {
+      connection.getSignaturesForAddress(publicKey).then(console.log)
       connection.onAccountChange(publicKey, () => {
         getBalance().then((balance) => setBalance(balance));
       }, 'confirmed')
@@ -118,7 +120,10 @@ const Home: NextPage = () => {
               <TabPane tab="Address book" key="3">
                 <AddressBook />
               </TabPane>
-              <TabPane tab="Faucet" key="4">
+              <TabPane tab="History" key="4">
+                  <TransactionsTab publicKey={publicKey} connection={connection} />
+              </TabPane>
+              <TabPane tab="Faucet" key="5">
                 <Button
                   type="primary"
                   onClick={() => { getTestTokens('devnet', publicKey) }}
@@ -127,6 +132,7 @@ const Home: NextPage = () => {
                 </Button>
               </TabPane>
             </Tabs>
+            {}
           </div>}
       </div>
     </div>
