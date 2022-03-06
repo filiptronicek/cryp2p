@@ -1,4 +1,4 @@
-import WAValidator from "multicoin-address-validator";
+import { validateSolAddress } from "./address";
 
 export const init = async () => {
     if (!('NDEFReader' in window)) { return false }
@@ -34,7 +34,7 @@ export const readAddresss = async (): Promise<undefined | string> => {
                     case "text":
                         const decoded = readTextRecord(record);
                         if (!decoded) continue;
-                        if (WAValidator.validate(decoded, 'sol')) {
+                        if (validateSolAddress(decoded)) {
                             result = decoded;
                             break;
                         }

@@ -26,8 +26,6 @@ function Transaction({ item, connection }: { item: ConfirmedSignatureInfo, conne
     const fromContactName = contacts?.find((ct) => ct.address === extraDetails?.transaction.message.accountKeys[0].toString())?.name || extraDetails && truncate(extraDetails?.transaction.message.accountKeys[0].toString());
     const toContactName = contacts?.find((ct) => ct.address === extraDetails?.transaction.message.accountKeys[1].toString())?.name || extraDetails && truncate(extraDetails?.transaction.message.accountKeys[1].toString());
 
-    console.log(extraDetails && fromContactName)
-
     return (
         <List.Item
             key={item.signature}

@@ -9,18 +9,10 @@ import { useState, useCallback, useMemo } from "react";
 import toast from "react-hot-toast";
 import { truncate } from "../lib/address";
 import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
+import { validateSolAddress } from "../lib/address";
 
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
-
-export function validateSolAddress(address: string) {
-    try {
-        const pubkey = new PublicKey(address);
-        return PublicKey.isOnCurve(pubkey.toBuffer());
-    } catch (error) {
-        return false;
-    }
-}
 
 export default function SendTab(
     {

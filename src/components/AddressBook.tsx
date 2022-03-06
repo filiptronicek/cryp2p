@@ -5,7 +5,7 @@ import { truncate } from "../lib/address";
 import { useState } from "react";
 import { useCopyToClipboard, useLocalStorage } from 'usehooks-ts'
 import toast from "react-hot-toast";
-import { validateSolAddress } from "./SendTab";
+import { validateSolAddress } from "../lib/address";
 
 export interface Contact {
     name: string,
