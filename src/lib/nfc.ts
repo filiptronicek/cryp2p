@@ -14,6 +14,24 @@ const readTextRecord = (record: NDEFRecord) => {
     return textDecoder.decode(record.data);
 }
 
+export class WritingError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = "WritingError";
+    }
+}
+
+export const writeAddress = async (address: string): Promise<boolean> => {
+    if (!(await init())) throw new ReferenceError('Your browser does not support NFC tags');  
+    const ndef = new NDEFReader();
+    await ndef.write(
+        address
+    ).catch(error => {
+        throw new WritingError(`Write failed :-( try again: ${error}.`);
+    });
+    return true;
+}
+
 /**
  * Reads a SOL address from an NFC tag
  * @returns the first found SOL address on the tag

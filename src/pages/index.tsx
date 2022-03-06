@@ -17,6 +17,8 @@ import SendTab from '../components/SendTab';
 import { useSolanaPrice } from '../components/hooks/useSolanaPrice';
 import AddressBook from '../components/AddressBook';
 import TransactionsTab from '../components/TransactionsTab';
+import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
+import ReceiveTab from '../components/ReceiveTab';
 
 const getTestTokens = async (network: 'testnet' | 'devnet', publicKey: PublicKey) => {
   const connection = new Connection(clusterApiUrl(network));
@@ -115,13 +117,13 @@ const Home: NextPage = () => {
                 <SendTab balance={balance} publicKey={publicKey} sendTransaction={sendTransaction} price={price} />
               </TabPane>
               <TabPane tab="Receive" key="2">
-                Content of Tab Pane 2
+                 <ReceiveTab address={publicKey.toString()} />
               </TabPane>
               <TabPane tab="Address book" key="3">
                 <AddressBook />
               </TabPane>
               <TabPane tab="History" key="4">
-                  <TransactionsTab publicKey={publicKey} connection={connection} />
+                <TransactionsTab publicKey={publicKey} connection={connection} />
               </TabPane>
               <TabPane tab="Faucet" key="5">
                 <Button
@@ -132,7 +134,7 @@ const Home: NextPage = () => {
                 </Button>
               </TabPane>
             </Tabs>
-            {}
+            { }
           </div>}
       </div>
     </div>
