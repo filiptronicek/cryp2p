@@ -5,14 +5,48 @@ import { Transaction, SystemProgram, PublicKey, LAMPORTS_PER_SOL, Connection } f
 import { Input, Button, InputNumber, Result, Modal, Select, Divider } from "antd";
 import { getDefaultProvider } from "ethers";
 import dynamic from "next/dynamic";
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, Dispatch, SetStateAction, useEffect } from "react";
 import toast from "react-hot-toast";
 import { truncate } from "../lib/address";
 import { MdOutlineNfc, MdOutlineQrCode } from 'react-icons/md';
 import { validateSolAddress } from "../lib/address";
+import { init, readAddresss } from "../lib/nfc";
 
 const BarcodeScannerComponent = dynamic(() => import('react-qr-barcode-scanner'), { ssr: false });
 const { Option } = Select;
+
+export const Scan = ({ isModalVisible, setIsModalVisible, setRecipient }: { isModalVisible: boolean; setIsModalVisible: Dispatch<SetStateAction<boolean>>, setRecipient: Dispatch<SetStateAction<string>> }) => {
+    useEffect(() => {
+        if (isModalVisible) {
+            (async function () {
+                if (!(await init())) {
+                    toast.error('Permission error');
+                    return;
+                }
+
+                const foundAddresss = await readAddresss();
+                if (!foundAddresss) {
+                    toast.error('Could not find any addresses on the tag');
+                    return;
+                }
+                setRecipient(foundAddresss);
+
+            }());
+        }
+    }, [isModalVisible])
+    return (
+        < Result
+            status="info"
+            title="Scanning"
+            extra={
+                <>
+                    <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
+                        Close scanner
+                    </Button>
+                </>
+            }
+        />)
+}
 
 export default function SendTab(
     {
@@ -272,17 +306,7 @@ export default function SendTab(
                             />
                         )}
                         {nfcPermission && (
-                            <Result
-                                status="error"
-                                title="You denied access to scanning."
-                                extra={
-                                    <>
-                                        <Button type="primary" key="close" onClick={() => setIsModalVisible(false)}>
-                                            Close scanner
-                                        </Button>
-                                    </>
-                                }
-                            />
+                            <Scan setIsModalVisible={setIsModalVisible} setRecipient={setRecipient} isModalVisible={isModalVisible} />
                         )}
                     </>
                 )}
